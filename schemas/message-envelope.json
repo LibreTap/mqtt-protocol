@@ -24,9 +24,9 @@
       "type": "string",
       "description": "Message type",
       "enum": [
-        "register_start", "register_cancel", "register_waiting", "register_writing", "register_success", "register_error",
-        "auth_start", "auth_verify", "auth_cancel", "auth_waiting", "auth_tag_detected", "auth_processing", "auth_success", "auth_failed", "auth_error",
-        "read_start", "read_cancel", "read_waiting", "read_success", "read_error",
+        "register_start", "register_cancel", "register_success", "register_error",
+        "auth_start", "auth_verify", "auth_cancel", "auth_tag_detected", "auth_success", "auth_failed", "auth_error",
+        "read_start", "read_cancel", "read_success", "read_error",
         "reset",
         "status_change", "mode_change", "heartbeat"
       ]

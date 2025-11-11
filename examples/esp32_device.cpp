@@ -86,29 +86,6 @@ void publishStatusChange(const char* status, const char* firmware_version, const
 
 
 /**
- * Publish auth waiting event
- */
-void publishAuthWaiting() {
-    StaticJsonDocument<256> doc;
-    
-    doc["version"] = "1.0";
-    doc["timestamp"] = getISO8601Timestamp();
-    doc["device_id"] = DEVICE_ID;
-    doc["event_type"] = "auth_waiting";
-    doc["request_id"] = current_request_id;
-    
-    JsonObject payload = doc.createNestedObject("payload");
-    payload["message"] = "Present tag to reader";
-    
-    char buffer[256];
-    serializeJson(doc, buffer);
-    
-    String topic = String("devices/") + DEVICE_ID + "/auth/waiting";
-    mqtt_client.publish(topic.c_str(), buffer, false); // QoS 0
-}
-
-
-/**
  * Publish tag detected event
  */
 void publishAuthTagDetected(const char* tag_uid) {
@@ -255,7 +232,6 @@ void onMqttMessage(char* topic, byte* payload, unsigned int length) {
         timeout_seconds = doc["payload"]["timeout_seconds"];
         
         publishModeChange("auth", "idle");
-        publishAuthWaiting();
         
         // Start NFC read loop
         startAuthMode();

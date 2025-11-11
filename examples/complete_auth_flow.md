@@ -6,12 +6,11 @@ This file demonstrates a complete authentication flow with all MQTT messages exc
 
 1. **Service initiates authentication**
 2. **Device changes mode to auth**
-3. **Device reports waiting for tag**
-4. **User presents tag to reader**
-5. **Device detects tag and reports UID**
-6. **Service sends verification data**
-7. **Device verifies and responds with success/failure**
-8. **Device returns to idle mode**
+3. **User presents tag to reader**
+4. **Device detects tag and reports UID**
+5. **Service sends verification data**
+6. **Device verifies and responds with success/failure**
+7. **Device returns to idle mode**
 
 ---
 
@@ -58,28 +57,7 @@ This file demonstrates a complete authentication flow with all MQTT messages exc
 
 ---
 
-## 3. Device → Service: Waiting for Tag
-
-**Topic:** `devices/reader-001/auth/waiting`  
-**QoS:** 0  
-**Retained:** No
-
-```json
-{
-  "version": "1.0",
-  "timestamp": "2025-11-11T12:00:00.200Z",
-  "device_id": "reader-001",
-  "event_type": "auth_waiting",
-  "request_id": "550e8400-e29b-41d4-a716-446655440002",
-  "payload": {
-    "message": "Present tag to reader"
-  }
-}
-```
-
----
-
-## 4. Device → Service: Tag Detected
+## 3. Device → Service: Tag Detected
 
 **Topic:** `devices/reader-001/auth/tag_detected`  
 **QoS:** 1  
@@ -101,7 +79,7 @@ This file demonstrates a complete authentication flow with all MQTT messages exc
 
 ---
 
-## 5. Service → Device: Verify Authentication
+## 4. Service → Device: Verify Authentication
 
 **Topic:** `devices/reader-001/auth/verify`  
 **QoS:** 1  
@@ -127,7 +105,7 @@ This file demonstrates a complete authentication flow with all MQTT messages exc
 
 ---
 
-## 6. Device → Service: Authentication Success
+## 5. Device → Service: Authentication Success
 
 **Topic:** `devices/reader-001/auth/success`  
 **QoS:** 1  
@@ -154,7 +132,7 @@ This file demonstrates a complete authentication flow with all MQTT messages exc
 
 ---
 
-## 7. Device → Service: Mode Change to Idle
+## 6. Device → Service: Mode Change to Idle
 
 **Topic:** `devices/reader-001/mode`  
 **QoS:** 1  

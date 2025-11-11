@@ -41,15 +41,15 @@ devices/{device_id}/heartbeat
 
 **Registration:**
 - Commands: `devices/{device_id}/register/start`, `devices/{device_id}/register/cancel`
-- Events: `devices/{device_id}/register/waiting`, `devices/{device_id}/register/writing`, `devices/{device_id}/register/success`, `devices/{device_id}/register/error`
+- Events: `devices/{device_id}/register/success`, `devices/{device_id}/register/error`
 
 **Authentication:**
 - Commands: `devices/{device_id}/auth/start`, `devices/{device_id}/auth/verify`, `devices/{device_id}/auth/cancel`
-- Events: `devices/{device_id}/auth/waiting`, `devices/{device_id}/auth/tag_detected`, `devices/{device_id}/auth/processing`, `devices/{device_id}/auth/success`, `devices/{device_id}/auth/failed`, `devices/{device_id}/auth/error`
+- Events: `devices/{device_id}/auth/tag_detected`, `devices/{device_id}/auth/success`, `devices/{device_id}/auth/failed`, `devices/{device_id}/auth/error`
 
 **Read:**
 - Commands: `devices/{device_id}/read/start`, `devices/{device_id}/read/cancel`
-- Events: `devices/{device_id}/read/waiting`, `devices/{device_id}/read/success`, `devices/{device_id}/read/error`
+- Events: `devices/{device_id}/read/success`, `devices/{device_id}/read/error`
 
 **Control:**
 - Command: `devices/{device_id}/reset`
@@ -88,7 +88,7 @@ All MQTT messages use this envelope:
 
 **Event Types:**
 - Commands: `register_start`, `register_cancel`, `auth_start`, `auth_verify`, `auth_cancel`, `read_start`, `read_cancel`, `reset`
-- Events: `register_waiting`, `register_writing`, `register_success`, `register_error`, `auth_waiting`, `auth_tag_detected`, `auth_processing`, `auth_success`, `auth_failed`, `auth_error`, `read_waiting`, `read_success`, `read_error`
+- Events: `register_success`, `register_error`, `auth_tag_detected`, `auth_success`, `auth_failed`, `auth_error`, `read_success`, `read_error`
 - State: `status_change`, `mode_change`, `heartbeat`
 
 **JSON Schemas:**  
@@ -187,11 +187,8 @@ sequenceDiagram
     participant Service
     participant Device
     
-    Service->>Device: register/start
+    Service->>Device: register/start (tag_uid, key)
     Device->>Device: mode_change (register)
-    Device->>Service: register/waiting
-    Note over Device: Waiting for tag
-    Device->>Service: register/writing
     Note over Device: Writing to tag
     Device->>Service: register/success
     Device->>Device: mode_change (idle)
@@ -206,11 +203,9 @@ sequenceDiagram
     
     Service->>Device: auth/start
     Device->>Device: mode_change (auth)
-    Device->>Service: auth/waiting
     Note over Device: Waiting for tag
     Device->>Service: auth/tag_detected (tag_uid)
     Service->>Device: auth/verify (key + user_data)
-    Device->>Service: auth/processing
     Note over Device: Verifying credentials
     Device->>Service: auth/success
     Device->>Device: mode_change (idle)
@@ -225,9 +220,8 @@ sequenceDiagram
     
     Service->>Device: read/start
     Device->>Device: mode_change (read)
-    Device->>Service: read/waiting
     Note over Device: Waiting for tag
-    Device->>Service: read/success
+    Device->>Service: read/success (block data)
     Device->>Device: mode_change (idle)
 ```
 
@@ -258,15 +252,12 @@ Send reset command. Device publishes `mode_change` (idle), cancels active sessio
 | `devices/+/*/success` | 1 | No | Operation result confirmation |
 | `devices/+/*/failed` | 1 | No | Auth failure confirmation |
 | `devices/+/*/error` | 1 | No | Error event delivery |
-| `devices/+/*/waiting` | 0 | No | Progress update (best effort) |
-| `devices/+/*/writing` | 0 | No | Progress update (best effort) |
-| `devices/+/*/processing` | 0 | No | Progress update (best effort) |
 | `devices/+/*/tag_detected` | 1 | No | Tag detection requires verify |
 | `devices/+/heartbeat` | 0 | No | Periodic health (best effort) |
 
 **Guidelines:**
 - Use QoS 1 for all commands and terminal events (success, failed, error)
-- Use QoS 0 for progress updates and telemetry
+- Use QoS 0 for telemetry (heartbeat)
 - Retain only state topics (status, mode)
 - Avoid QoS 2 (unnecessary overhead)
 
@@ -408,8 +399,8 @@ See [`/examples/README.md`](./examples/README.md) for detailed usage instruction
 
 ### Common Event Types
 - **Commands:** `{operation}_start`, `{operation}_cancel`, `auth_verify`, `reset`
-- **Events:** `{operation}_waiting`, `{operation}_success`, `{operation}_error`
-- **Auth Specific:** `auth_tag_detected`, `auth_processing`, `auth_failed`
+- **Events:** `{operation}_success`, `{operation}_error`
+- **Auth Specific:** `auth_tag_detected`, `auth_failed`
 - **State:** `status_change`, `mode_change`, `heartbeat`
 
 ### Modes

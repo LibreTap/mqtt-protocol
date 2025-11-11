@@ -6,11 +6,10 @@ Complete message sequence for registering a new NFC tag.
 
 1. **Service sends register start command**
 2. **Device changes mode to register**
-3. **Device reports waiting for tag**
-4. **User presents tag**
-5. **Device writes to tag**
-6. **Device reports success**
-7. **Device returns to idle**
+3. **User presents tag (included in start command)**
+4. **Device writes to tag**
+5. **Device reports success**
+6. **Device returns to idle**
 
 ---
 
@@ -58,47 +57,7 @@ Complete message sequence for registering a new NFC tag.
 
 ---
 
-## 3. Device → Service: Waiting
-
-**Topic:** `devices/reader-001/register/waiting`  
-**QoS:** 0
-
-```json
-{
-  "version": "1.0",
-  "timestamp": "2025-11-11T14:00:00.200Z",
-  "device_id": "reader-001",
-  "event_type": "register_waiting",
-  "request_id": "650e8400-e29b-41d4-a716-446655440003",
-  "payload": {
-    "message": "Present tag to reader"
-  }
-}
-```
-
----
-
-## 4. Device → Service: Writing
-
-**Topic:** `devices/reader-001/register/writing`  
-**QoS:** 0
-
-```json
-{
-  "version": "1.0",
-  "timestamp": "2025-11-11T14:00:05.000Z",
-  "device_id": "reader-001",
-  "event_type": "register_writing",
-  "request_id": "650e8400-e29b-41d4-a716-446655440003",
-  "payload": {
-    "message": "Writing to tag..."
-  }
-}
-```
-
----
-
-## 5. Device → Service: Success
+## 3. Device → Service: Success
 
 **Topic:** `devices/reader-001/register/success`  
 **QoS:** 1
@@ -106,7 +65,7 @@ Complete message sequence for registering a new NFC tag.
 ```json
 {
   "version": "1.0",
-  "timestamp": "2025-11-11T14:00:07.000Z",
+  "timestamp": "2025-11-11T14:00:00.250Z",
   "device_id": "reader-001",
   "event_type": "register_success",
   "request_id": "650e8400-e29b-41d4-a716-446655440003",
@@ -120,7 +79,7 @@ Complete message sequence for registering a new NFC tag.
 
 ---
 
-## 6. Device → Service: Mode Change to Idle
+## 4. Device → Service: Mode Change to Idle
 
 **Topic:** `devices/reader-001/mode`  
 **QoS:** 1  
@@ -129,7 +88,7 @@ Complete message sequence for registering a new NFC tag.
 ```json
 {
   "version": "1.0",
-  "timestamp": "2025-11-11T14:00:07.100Z",
+  "timestamp": "2025-11-11T14:00:00.350Z",
   "device_id": "reader-001",
   "event_type": "mode_change",
   "request_id": "650e8400-e29b-41d4-a716-446655440003",
