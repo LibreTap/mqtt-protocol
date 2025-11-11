@@ -10,7 +10,7 @@
 5. [QoS & Retention](#5-qos--retention)
 6. [Error Handling](#6-error-handling)
 7. [Security](#7-security)
-8. [Implementation Examples](#8-implementation-examples)
+8. [Additional Resources](#8-additional-resources)
 
 ---
 
@@ -91,125 +91,72 @@ All MQTT messages use this envelope:
 - Events: `register_waiting`, `register_writing`, `register_success`, `register_error`, `auth_waiting`, `auth_tag_detected`, `auth_processing`, `auth_success`, `auth_failed`, `auth_error`, `read_waiting`, `read_success`, `read_error`
 - State: `status_change`, `mode_change`, `heartbeat`
 
+**JSON Schemas:**  
+See [`/schemas`](./schemas) directory for complete JSON Schema definitions for validation.
+
 ### 3.2 Command Payloads (Service → Device)
 
 **Register Start:**
-```json
-{
-  "tag_uid": "04:A1:B2:C3:D4:E5:F6",
-  "key": "0123456789ABCDEF0123456789ABCDEF",
-  "timeout_seconds": 30
-}
-```
+- `tag_uid`: NFC tag UID (colon-separated hex)
+- `key`: 32-character hex encryption key
+- `timeout_seconds`: Operation timeout
 
 **Auth Start:**
-```json
-{
-  "timeout_seconds": 30
-}
-```
+- `timeout_seconds`: Operation timeout
 
 **Auth Verify:**
-```json
-{
-  "tag_uid": "04:A1:B2:C3:D4:E5:F6",
-  "key": "0123456789ABCDEF0123456789ABCDEF",
-  "user_data": {
-    "username": "john.doe",
-    "context": "door_access"
-  }
-}
-```
+- `tag_uid`: Detected tag UID
+- `key`: 32-character hex encryption key
+- `user_data`: User authentication data (object)
 
 **Read Start:**
-```json
-{
-  "timeout_seconds": 30,
-  "read_blocks": [0, 1, 2, 3, 4, 5, 6, 7]
-}
-```
+- `timeout_seconds`: Operation timeout
+- `read_blocks`: Array of block numbers to read
 
 **Cancel / Reset:**
-```json
-{}
-```
+- Empty payload `{}`
+
+For complete payload schemas with validation rules, see [`/schemas/commands.json`](./schemas/commands.json).
 
 ### 3.3 Event Payloads (Device → Service)
 
 **Status Change:**
-```json
-{
-  "status": "online",
-  "firmware_version": "1.2.3",
-  "ip_address": "192.168.1.100"
-}
-```
+- `status`: "online" or "offline"
+- `firmware_version`: Semantic version string
+- `ip_address`: IPv4 address
 
 **Mode Change:**
-```json
-{
-  "mode": "auth",
-  "previous_mode": "idle"
-}
-```
+- `mode`: Current mode (idle|register|auth|read)
+- `previous_mode`: Previous mode
 
 **Tag Detected:**
-```json
-{
-  "tag_uid": "04:A1:B2:C3:D4:E5:F6",
-  "message": "Tag detected. Awaiting user data."
-}
-```
+- `tag_uid`: NFC tag UID
+- `message`: Human-readable status message
 
-**Success (Register/Read):**
-```json
-{
-  "tag_uid": "04:A1:B2:C3:D4:E5:F6",
-  "blocks_written": 8,
-  "message": "Tag registered successfully"
-}
-```
+**Success Events:**
+- `tag_uid`: Tag UID
+- `authenticated`: Boolean (auth only)
+- `message`: Success message
+- `user_data`: User data (auth only)
+- `blocks_written`: Count (register only)
 
-**Success (Auth):**
-```json
-{
-  "tag_uid": "04:A1:B2:C3:D4:E5:F6",
-  "authenticated": true,
-  "message": "Authentication successful",
-  "user_data": {
-    "username": "john.doe",
-    "context": "door_access"
-  }
-}
-```
+**Failed Events (Auth):**
+- `tag_uid`: Tag UID
+- `authenticated`: false
+- `reason`: Failure reason
 
-**Failed (Auth):**
-```json
-{
-  "tag_uid": "04:A1:B2:C3:D4:E5:F6",
-  "authenticated": false,
-  "reason": "Invalid decryption key"
-}
-```
-
-**Error:**
-```json
-{
-  "error": "NFC communication timeout",
-  "error_code": "NFC_TIMEOUT",
-  "retry_possible": true,
-  "component": "nfc"
-}
-```
+**Error Events:**
+- `error`: Human-readable description
+- `error_code`: Machine-parseable code
+- `retry_possible`: Boolean
+- `component`: Component identifier
 
 **Heartbeat:**
-```json
-{
-  "uptime_seconds": 3600,
-  "memory_usage_percent": 45.2,
-  "operations_completed": 127
-}
-```
+- `uptime_seconds`: Device uptime
+- `memory_usage_percent`: Memory usage
+- `operations_completed`: Operation count
+
+For complete event schemas with validation rules, see [`/schemas/events.json`](./schemas/events.json).
 
 ---
 
@@ -418,238 +365,30 @@ topic read devices/{device_id}/reset
 
 ---
 
-## 8. Implementation Examples
+## 8. Additional Resources
 
-### 8.1 Python Service (TapService)
+### Schemas
+Complete JSON Schema definitions for message validation:
+- [`/schemas/message-envelope.json`](./schemas/message-envelope.json) - Base envelope structure
+- [`/schemas/commands.json`](./schemas/commands.json) - Command payload schemas
+- [`/schemas/events.json`](./schemas/events.json) - Event payload schemas
 
-**Publishing Commands:**
-```python
-import asyncio
-import json
-from datetime import datetime, UTC
-from uuid import uuid4
-import asyncio_mqtt as aiomqtt
+See [`/schemas/README.md`](./schemas/README.md) for usage examples and validation best practices.
 
-async def send_auth_start(device_id: str, timeout: int = 30):
-    request_id = str(uuid4())
-    
-    message = {
-        "version": "1.0",
-        "timestamp": datetime.now(UTC).isoformat(),
-        "device_id": device_id,
-        "event_type": "auth_start",
-        "request_id": request_id,
-        "payload": {
-            "timeout_seconds": timeout
-        }
-    }
-    
-    async with aiomqtt.Client("mqtt.broker.com") as client:
-        await client.publish(
-            f"devices/{device_id}/auth/start",
-            payload=json.dumps(message),
-            qos=1
-        )
-    
-    return request_id
-```
+### Implementation Examples
 
-**Handling Events:**
-```python
-async def handle_mqtt_events():
-    async with aiomqtt.Client("mqtt.broker.com") as client:
-        await client.subscribe("devices/#")
-        
-        async for message in client.messages:
-            payload = json.loads(message.payload)
-            device_id = payload["device_id"]
-            event_type = payload["event_type"]
-            request_id = payload["request_id"]
-            
-            if event_type == "auth_tag_detected":
-                # Send verify command
-                tag_uid = payload["payload"]["tag_uid"]
-                await send_auth_verify(device_id, request_id, tag_uid)
-            
-            elif event_type == "auth_success":
-                # Update session status
-                session_manager.complete_session(request_id, "success")
-                
-            elif event_type == "mode_change":
-                # Update device mode
-                session_manager.update_device_mode(
-                    device_id, 
-                    payload["payload"]["mode"]
-                )
-```
+Complete implementation examples are available in the [`/examples`](./examples) directory:
 
-### 8.2 ESP32 Device (TapReader)
+**Code Examples:**
+- [`python_service.py`](./examples/python_service.py) - Python service implementation with asyncio-mqtt
+- [`esp32_device.cpp`](./examples/esp32_device.cpp) - ESP32 device implementation with PubSubClient
 
-**Publishing Events:**
-```cpp
-void publishModeChange(const char* new_mode, const char* previous_mode) {
-    StaticJsonDocument<256> doc;
-    
-    doc["version"] = "1.0";
-    doc["timestamp"] = getISO8601Timestamp();
-    doc["device_id"] = DEVICE_ID;
-    doc["event_type"] = "mode_change";
-    doc["request_id"] = current_request_id;
-    
-    JsonObject payload = doc.createNestedObject("payload");
-    payload["mode"] = new_mode;
-    payload["previous_mode"] = previous_mode;
-    
-    char buffer[256];
-    serializeJson(doc, buffer);
-    
-    String topic = String("devices/") + DEVICE_ID + "/mode";
-    mqtt_client.publish(topic.c_str(), buffer, true, 1); // retained, QoS 1
-}
-```
+**Flow Examples:**
+- [`complete_auth_flow.md`](./examples/complete_auth_flow.md) - Complete authentication flow with all messages
+- [`register_flow.md`](./examples/register_flow.md) - Tag registration flow
+- [`read_flow.md`](./examples/read_flow.md) - Tag read operation flow
 
-**Handling Commands:**
-```cpp
-void onMqttMessage(String &topic, String &payload) {
-    StaticJsonDocument<512> doc;
-    deserializeJson(doc, payload);
-    
-    String event_type = doc["event_type"];
-    String request_id = doc["request_id"];
-    
-    if (event_type == "auth_start") {
-        current_request_id = request_id;
-        timeout_seconds = doc["payload"]["timeout_seconds"];
-        
-        publishModeChange("auth", "idle");
-        publishAuthWaiting();
-        
-        // Start NFC read loop
-        startAuthMode();
-    }
-    else if (event_type == "auth_verify") {
-        String tag_uid = doc["payload"]["tag_uid"];
-        String key = doc["payload"]["key"];
-        JsonObject user_data = doc["payload"]["user_data"];
-        
-        // Verify tag and publish result
-        bool verified = verifyTag(tag_uid, key);
-        
-        if (verified) {
-            publishAuthSuccess(tag_uid, user_data);
-        } else {
-            publishAuthFailed(tag_uid, "Invalid key");
-        }
-        
-        publishModeChange("idle", "auth");
-    }
-}
-```
-
-### 8.3 Complete Auth Flow Example
-
-**1. Service initiates auth:**
-```json
-Topic: devices/reader-001/auth/start
-Payload: {
-  "version": "1.0",
-  "timestamp": "2025-11-11T12:00:00.000Z",
-  "device_id": "reader-001",
-  "event_type": "auth_start",
-  "request_id": "550e8400-e29b-41d4-a716-446655440002",
-  "payload": {"timeout_seconds": 30}
-}
-```
-
-**2. Device changes mode:**
-```json
-Topic: devices/reader-001/mode
-Payload: {
-  "version": "1.0",
-  "timestamp": "2025-11-11T12:00:00.100Z",
-  "device_id": "reader-001",
-  "event_type": "mode_change",
-  "request_id": "550e8400-e29b-41d4-a716-446655440002",
-  "payload": {"mode": "auth", "previous_mode": "idle"}
-}
-```
-
-**3. Device reports waiting:**
-```json
-Topic: devices/reader-001/auth/waiting
-Payload: {
-  "version": "1.0",
-  "timestamp": "2025-11-11T12:00:00.200Z",
-  "device_id": "reader-001",
-  "event_type": "auth_waiting",
-  "request_id": "550e8400-e29b-41d4-a716-446655440002",
-  "payload": {"message": "Present tag to reader"}
-}
-```
-
-**4. Device detects tag:**
-```json
-Topic: devices/reader-001/auth/tag_detected
-Payload: {
-  "version": "1.0",
-  "timestamp": "2025-11-11T12:00:02.000Z",
-  "device_id": "reader-001",
-  "event_type": "auth_tag_detected",
-  "request_id": "550e8400-e29b-41d4-a716-446655440002",
-  "payload": {
-    "tag_uid": "04:A1:B2:C3:D4:E5:F6",
-    "message": "Tag detected. Awaiting user data."
-  }
-}
-```
-
-**5. Service sends verify:**
-```json
-Topic: devices/reader-001/auth/verify
-Payload: {
-  "version": "1.0",
-  "timestamp": "2025-11-11T12:00:05.000Z",
-  "device_id": "reader-001",
-  "event_type": "auth_verify",
-  "request_id": "550e8400-e29b-41d4-a716-446655440002",
-  "payload": {
-    "tag_uid": "04:A1:B2:C3:D4:E5:F6",
-    "key": "0123456789ABCDEF0123456789ABCDEF",
-    "user_data": {"username": "john.doe", "context": "door_access"}
-  }
-}
-```
-
-**6. Device verifies and responds:**
-```json
-Topic: devices/reader-001/auth/success
-Payload: {
-  "version": "1.0",
-  "timestamp": "2025-11-11T12:00:06.000Z",
-  "device_id": "reader-001",
-  "event_type": "auth_success",
-  "request_id": "550e8400-e29b-41d4-a716-446655440002",
-  "payload": {
-    "tag_uid": "04:A1:B2:C3:D4:E5:F6",
-    "authenticated": true,
-    "message": "Authentication successful",
-    "user_data": {"username": "john.doe", "context": "door_access"}
-  }
-}
-```
-
-**7. Device returns to idle:**
-```json
-Topic: devices/reader-001/mode
-Payload: {
-  "version": "1.0",
-  "timestamp": "2025-11-11T12:00:06.100Z",
-  "device_id": "reader-001",
-  "event_type": "mode_change",
-  "request_id": "550e8400-e29b-41d4-a716-446655440002",
-  "payload": {"mode": "idle", "previous_mode": "auth"}
-}
-```
+See [`/examples/README.md`](./examples/README.md) for detailed usage instructions.
 
 ---
 
@@ -682,3 +421,4 @@ Payload: {
 ### Status
 - `online` - Device connected and operational
 - `offline` - Device disconnected (LWT)
+

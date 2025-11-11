@@ -1,0 +1,44 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "MQTT Message Envelope",
+  "description": "Standard envelope for all MQTT messages in the LibreTap protocol",
+  "type": "object",
+  "required": ["version", "timestamp", "device_id", "event_type", "request_id", "payload"],
+  "properties": {
+    "version": {
+      "type": "string",
+      "description": "Protocol version",
+      "const": "1.0"
+    },
+    "timestamp": {
+      "type": "string",
+      "format": "date-time",
+      "description": "ISO 8601 UTC timestamp"
+    },
+    "device_id": {
+      "type": "string",
+      "description": "Device identifier",
+      "pattern": "^[a-zA-Z0-9_-]+$"
+    },
+    "event_type": {
+      "type": "string",
+      "description": "Message type",
+      "enum": [
+        "register_start", "register_cancel", "register_waiting", "register_writing", "register_success", "register_error",
+        "auth_start", "auth_verify", "auth_cancel", "auth_waiting", "auth_tag_detected", "auth_processing", "auth_success", "auth_failed", "auth_error",
+        "read_start", "read_cancel", "read_waiting", "read_success", "read_error",
+        "reset",
+        "status_change", "mode_change", "heartbeat"
+      ]
+    },
+    "request_id": {
+      "type": "string",
+      "format": "uuid",
+      "description": "UUID v4 for operation tracking"
+    },
+    "payload": {
+      "type": "object",
+      "description": "Event-specific payload data"
+    }
+  }
+}

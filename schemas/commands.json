@@ -1,0 +1,99 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Command Payloads",
+  "description": "Payload schemas for commands sent from Service to Device",
+  "definitions": {
+    "register_start": {
+      "type": "object",
+      "required": ["tag_uid", "key", "timeout_seconds"],
+      "properties": {
+        "tag_uid": {
+          "type": "string",
+          "description": "NFC tag UID in colon-separated hex format",
+          "pattern": "^([0-9A-Fa-f]{2}:)+[0-9A-Fa-f]{2}$"
+        },
+        "key": {
+          "type": "string",
+          "description": "32-character hex encryption key",
+          "pattern": "^[0-9A-Fa-f]{32}$"
+        },
+        "timeout_seconds": {
+          "type": "integer",
+          "description": "Operation timeout in seconds",
+          "minimum": 1,
+          "maximum": 300
+        }
+      }
+    },
+    "auth_start": {
+      "type": "object",
+      "required": ["timeout_seconds"],
+      "properties": {
+        "timeout_seconds": {
+          "type": "integer",
+          "description": "Operation timeout in seconds",
+          "minimum": 1,
+          "maximum": 300
+        }
+      }
+    },
+    "auth_verify": {
+      "type": "object",
+      "required": ["tag_uid", "key", "user_data"],
+      "properties": {
+        "tag_uid": {
+          "type": "string",
+          "description": "NFC tag UID in colon-separated hex format",
+          "pattern": "^([0-9A-Fa-f]{2}:)+[0-9A-Fa-f]{2}$"
+        },
+        "key": {
+          "type": "string",
+          "description": "32-character hex encryption key",
+          "pattern": "^[0-9A-Fa-f]{32}$"
+        },
+        "user_data": {
+          "type": "object",
+          "description": "User authentication data",
+          "properties": {
+            "username": {
+              "type": "string"
+            },
+            "context": {
+              "type": "string"
+            }
+          }
+        }
+      }
+    },
+    "read_start": {
+      "type": "object",
+      "required": ["timeout_seconds", "read_blocks"],
+      "properties": {
+        "timeout_seconds": {
+          "type": "integer",
+          "description": "Operation timeout in seconds",
+          "minimum": 1,
+          "maximum": 300
+        },
+        "read_blocks": {
+          "type": "array",
+          "description": "Block numbers to read from tag",
+          "items": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 255
+          },
+          "minItems": 1
+        }
+      }
+    },
+    "cancel": {
+      "type": "object",
+      "description": "Empty payload for cancel operations"
+    },
+    "reset": {
+      "type": "object",
+      "description": "Empty payload for reset command"
+    }
+  }
+}

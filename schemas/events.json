@@ -1,0 +1,151 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Event Payloads",
+  "description": "Payload schemas for events sent from Device to Service",
+  "definitions": {
+    "status_change": {
+      "type": "object",
+      "required": ["status", "firmware_version", "ip_address"],
+      "properties": {
+        "status": {
+          "type": "string",
+          "enum": ["online", "offline"]
+        },
+        "firmware_version": {
+          "type": "string",
+          "pattern": "^\\d+\\.\\d+\\.\\d+$"
+        },
+        "ip_address": {
+          "type": "string",
+          "format": "ipv4"
+        }
+      }
+    },
+    "mode_change": {
+      "type": "object",
+      "required": ["mode", "previous_mode"],
+      "properties": {
+        "mode": {
+          "type": "string",
+          "enum": ["idle", "register", "auth", "read"]
+        },
+        "previous_mode": {
+          "type": "string",
+          "enum": ["idle", "register", "auth", "read"]
+        }
+      }
+    },
+    "tag_detected": {
+      "type": "object",
+      "required": ["tag_uid", "message"],
+      "properties": {
+        "tag_uid": {
+          "type": "string",
+          "description": "NFC tag UID in colon-separated hex format",
+          "pattern": "^([0-9A-Fa-f]{2}:)+[0-9A-Fa-f]{2}$"
+        },
+        "message": {
+          "type": "string"
+        }
+      }
+    },
+    "success_register_read": {
+      "type": "object",
+      "required": ["tag_uid", "message"],
+      "properties": {
+        "tag_uid": {
+          "type": "string",
+          "pattern": "^([0-9A-Fa-f]{2}:)+[0-9A-Fa-f]{2}$"
+        },
+        "blocks_written": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "message": {
+          "type": "string"
+        }
+      }
+    },
+    "success_auth": {
+      "type": "object",
+      "required": ["tag_uid", "authenticated", "message"],
+      "properties": {
+        "tag_uid": {
+          "type": "string",
+          "pattern": "^([0-9A-Fa-f]{2}:)+[0-9A-Fa-f]{2}$"
+        },
+        "authenticated": {
+          "type": "boolean",
+          "const": true
+        },
+        "message": {
+          "type": "string"
+        },
+        "user_data": {
+          "type": "object"
+        }
+      }
+    },
+    "failed_auth": {
+      "type": "object",
+      "required": ["tag_uid", "authenticated", "reason"],
+      "properties": {
+        "tag_uid": {
+          "type": "string",
+          "pattern": "^([0-9A-Fa-f]{2}:)+[0-9A-Fa-f]{2}$"
+        },
+        "authenticated": {
+          "type": "boolean",
+          "const": false
+        },
+        "reason": {
+          "type": "string"
+        }
+      }
+    },
+    "error": {
+      "type": "object",
+      "required": ["error", "error_code", "retry_possible", "component"],
+      "properties": {
+        "error": {
+          "type": "string",
+          "description": "Human-readable error description"
+        },
+        "error_code": {
+          "type": "string",
+          "enum": [
+            "NFC_TIMEOUT", "NFC_TAG_LOST", "NFC_AUTH_FAILED", "NFC_READ_ERROR", "NFC_WRITE_ERROR",
+            "NFC_UNSUPPORTED_TAG", "NFC_INVALID_KEY", "NFC_DEVICE_BUSY", "NFC_DEVICE_ERROR",
+            "INVALID_COMMAND", "SESSION_NOT_FOUND", "TIMEOUT_EXCEEDED"
+          ]
+        },
+        "retry_possible": {
+          "type": "boolean"
+        },
+        "component": {
+          "type": "string",
+          "enum": ["nfc", "pn532", "crypto", "device", "protocol"]
+        }
+      }
+    },
+    "heartbeat": {
+      "type": "object",
+      "required": ["uptime_seconds", "memory_usage_percent", "operations_completed"],
+      "properties": {
+        "uptime_seconds": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "memory_usage_percent": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 100
+        },
+        "operations_completed": {
+          "type": "integer",
+          "minimum": 0
+        }
+      }
+    }
+  }
+}

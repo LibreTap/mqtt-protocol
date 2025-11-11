@@ -23,6 +23,9 @@ This repository defines the MQTT-based protocol for the LibreTap NFC authenticat
 ## Quick Links
 
 - [📖 Full Specification](MQTT_PROTOCOL_SPEC.md)
+- [📋 Documentation Index](PROTOCOL_INDEX.md) - Navigation guide
+- [📁 JSON Schemas](schemas/) - Message validation schemas
+- [💡 Examples](examples/) - Implementation examples and flow diagrams
 - [🔄 Changelog](CHANGELOG.md)
 - [💻 Python Implementation](https://github.com/LibreTap/TapService)
 - [🔌 ESP32 Implementation](https://github.com/LibreTap/TapReader)
