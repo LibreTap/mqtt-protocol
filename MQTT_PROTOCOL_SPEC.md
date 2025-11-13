@@ -56,7 +56,7 @@ devices/{device_id}/heartbeat
 
 **State (Retained):**
 - `devices/{device_id}/status` - Device online/offline
-- `devices/{device_id}/mode` - Current mode: idle|register|auth|read
+- `devices/{device_id}/mode` - Current mode: idle|register|auth|read|unknown
 
 **Health:**
 - `devices/{device_id}/heartbeat` - Periodic health metrics
@@ -126,8 +126,9 @@ For complete payload schemas with validation rules, see [`/schemas/commands.json
 - `ip_address`: IPv4 address
 
 **Mode Change:**
-- `mode`: Current mode (idle|register|auth|read)
+- `mode`: Current mode (idle|register|auth|read|unknown)
 - `previous_mode`: Previous mode
+- Note: `unknown` indicates device error state or indeterminate mode
 
 **Tag Detected:**
 - `tag_uid`: NFC tag UID
@@ -295,7 +296,8 @@ All error events must include:
 **Device-Side:**
 - Read/Write errors: 2 automatic retries with 500ms delay
 - Timeout errors: No retry, return to idle and publish error
-- Hardware errors: No retry, publish error and await reset
+- Hardware errors: No retry, publish error and set mode to `unknown`, await reset
+- Unrecoverable state: Set mode to `unknown`, publish error event
 
 **Service-Side:**
 - Map error events to operation session status

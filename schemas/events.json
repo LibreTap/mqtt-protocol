@@ -27,11 +27,11 @@
       "properties": {
         "mode": {
           "type": "string",
-          "enum": ["idle", "register", "auth", "read"]
+          "enum": ["idle", "register", "auth", "read", "unknown"]
         },
         "previous_mode": {
           "type": "string",
-          "enum": ["idle", "register", "auth", "read"]
+          "enum": ["idle", "register", "auth", "read", "unknown"]
         }
       }
     },
