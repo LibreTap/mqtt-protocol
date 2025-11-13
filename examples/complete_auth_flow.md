@@ -85,6 +85,8 @@ This file demonstrates a complete authentication flow with all MQTT messages exc
 **QoS:** 1  
 **Retained:** No
 
+**Note:** Service looks up the stored shared secret `key` associated with this `tag_uid` and sends it for device verification.
+
 ```json
 {
   "version": "1.0",
@@ -110,6 +112,8 @@ This file demonstrates a complete authentication flow with all MQTT messages exc
 **Topic:** `devices/reader-001/auth/success`  
 **QoS:** 1  
 **Retained:** No
+
+**Note:** Device reads the key stored in the tag's user buffer, compares it with the received `key`, and if they match, echoes back the `user_data` to confirm authentication.
 
 ```json
 {

@@ -18,6 +18,8 @@ Complete message sequence for registering a new NFC tag.
 **Topic:** `devices/reader-001/register/start`  
 **QoS:** 1
 
+**Note:** Service generates a new shared secret `key` (128-bit hex) and associates it with this `tag_uid` in the database before sending this command.
+
 ```json
 {
   "version": "1.0",
@@ -61,6 +63,8 @@ Complete message sequence for registering a new NFC tag.
 
 **Topic:** `devices/reader-001/register/success`  
 **QoS:** 1
+
+**Note:** Device has written the `key` to the tag's user buffer (authenticated write to blocks 4-7 on NTAG21x). This key will be used for future authentication.
 
 ```json
 {

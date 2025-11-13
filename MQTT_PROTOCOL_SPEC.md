@@ -111,7 +111,8 @@ See [`/schemas`](./schemas) directory for complete JSON Schema definitions for v
 
 **Read Start:**
 - `timeout_seconds`: Operation timeout
-- `read_blocks`: Array of block numbers to read
+
+**Note:** In v1.0, `read` operation is for tag discovery only (returns `tag_uid`). Block data reading will be added in v2.0.
 
 **Cancel / Reset:**
 - Empty payload `{}`
@@ -140,6 +141,8 @@ For complete payload schemas with validation rules, see [`/schemas/commands.json
 - `message`: Success message
 - `user_data`: User data (auth only)
 - `blocks_written`: Count (register only)
+
+**Note:** In v1.0, `read/success` returns only `tag_uid` and `message` (no block data).
 
 **Failed Events (Auth):**
 - `tag_uid`: Tag UID
@@ -222,6 +225,8 @@ sequenceDiagram
 
 ### 4.4 Read Flow
 
+**Purpose:** Tag discovery only (v1.0). Returns `tag_uid` without reading block data.
+
 ```mermaid
 sequenceDiagram
     participant Service
@@ -230,9 +235,11 @@ sequenceDiagram
     Service->>Device: read/start
     Device->>Device: mode_change (read)
     Note over Device: Waiting for tag
-    Device->>Service: read/success (block data)
+    Device->>Service: read/success (tag_uid)
     Device->>Device: mode_change (idle)
 ```
+
+**Note:** Block data reading will be added in v2.0.
 
 ### 4.5 Cancel Operation
 Send cancel command to abort active operation. Device returns to idle mode.
@@ -344,13 +351,56 @@ topic read devices/{device_id}/read/cancel
 topic read devices/{device_id}/reset
 ```
 
-### 7.3 Payload Security
+### 7.3 Cryptographic Model: Shared Secret Authentication
+
+**Current Implementation (v1.0):**
+
+LibreTap uses a **shared secret verification model** where the NFC tag stores encrypted credential data that both the device and service can validate.
+
+#### Registration Flow:
+1. **Service generates shared secret:** 32-character hex key (128-bit)
+2. **Service sends:** `register_start` with `tag_uid` and `key`
+3. **Device writes to tag:** Stores `key` in NFC tag's user buffer (authenticated write, blocks 4-7 on NTAG21x)
+4. **Service stores:** Associates `tag_uid` → `key` mapping in database
+
+**Note:** v1.0 stores only the shared secret key on the tag. Additional data storage planned for v2.0.
+
+#### Authentication Flow:
+1. **Device detects tag:** Publishes `auth_tag_detected` with `tag_uid`
+2. **Service retrieves key:** Looks up stored `key` for this `tag_uid`
+3. **Service sends:** `auth_verify` with `tag_uid`, `key`, and `user_data`
+4. **Device validates:** Reads stored key from tag's user buffer, compares with received `key`
+   - **Match:** Publishes `auth_success` with `user_data` echoed back
+   - **Mismatch:** Publishes `auth_failed` with reason
+
+#### Security Properties:
+- **Symmetric verification:** Same key used for registration and authentication
+- **Tag-stored credential:** Key persists in NFC tag's authenticated user buffer
+- **Service-authoritative:** Service decides authentication by providing correct key
+- **Offline-capable:** Device validates without internet after initial key retrieval
+
+#### Key Format:
+- **Type:** Shared secret (symmetric)
+- **Length:** 32 hex characters (16 bytes / 128 bits)
+- **Pattern:** `^[0-9A-Fa-f]{32}$`
+- **Storage:** NFC tag user buffer (blocks 4-7 on NTAG21x)
+
+#### Limitations:
+- No forward secrecy (same key used repeatedly)
+- Service must protect key database (compromise reveals all credentials)
+- No replay attack protection
+- Tag can be cloned if key is extracted
+
+**Future Enhancement (v2.0 planned):**  
+Migration to asymmetric challenge-response model with ephemeral challenges is planned to address these limitations. See [ROADMAP.md](./ROADMAP.md) for details.
+
+### 7.4 Payload Security
 - Never log encryption keys or sensitive user_data
 - Validate UUID format and timestamp (±5 minutes)
 - Optionally encrypt command payloads using JWE
 - Implement rate limiting: max 10 commands/minute per device
 
-### 7.4 Validation Rules
+### 7.5 Validation Rules
 
 **Device Validation:**
 - Verify `request_id` is valid UUID v4

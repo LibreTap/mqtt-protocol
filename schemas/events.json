@@ -52,6 +52,7 @@
     "success_register_read": {
       "type": "object",
       "required": ["tag_uid", "message"],
+      "description": "Success payload for register and read operations. Note: v1.0 read returns only tag_uid (no block data).",
       "properties": {
         "tag_uid": {
           "type": "string",
@@ -59,7 +60,8 @@
         },
         "blocks_written": {
           "type": "integer",
-          "minimum": 0
+          "minimum": 0,
+          "description": "Only present for register_success events"
         },
         "message": {
           "type": "string"

@@ -1,13 +1,15 @@
 # Read Flow Example
 
-Complete message sequence for reading data from an NFC tag.
+Complete message sequence for tag discovery (reading tag UID).
+
+**Note:** In v1.0, the read operation is for **tag discovery only** and returns the `tag_uid` without reading block data. Block data storage and reading will be added in v2.0.
 
 ## Flow Sequence
 
 1. **Service sends read start command**
 2. **Device changes mode to read**
 3. **User presents tag**
-4. **Device reads blocks and reports success**
+4. **Device reads tag UID and reports success**
 5. **Device returns to idle**
 
 ---
@@ -25,8 +27,7 @@ Complete message sequence for reading data from an NFC tag.
   "event_type": "read_start",
   "request_id": "750e8400-e29b-41d4-a716-446655440004",
   "payload": {
-    "timeout_seconds": 30,
-    "read_blocks": [0, 1, 2, 3, 4, 5, 6, 7]
+    "timeout_seconds": 30
   }
 }
 ```
@@ -69,18 +70,7 @@ Complete message sequence for reading data from an NFC tag.
   "request_id": "750e8400-e29b-41d4-a716-446655440004",
   "payload": {
     "tag_uid": "04:A1:B2:C3:D4:E5:F6",
-    "blocks_read": 8,
-    "data": {
-      "0": "00112233445566778899AABBCCDDEEFF",
-      "1": "FFEEDDCCBBAA99887766554433221100",
-      "2": "0123456789ABCDEF0123456789ABCDEF",
-      "3": "FEDCBA9876543210FEDCBA9876543210",
-      "4": "AAAABBBBCCCCDDDDEEEEFFFFGGGGHHH",
-      "5": "11111111222222223333333344444444",
-      "6": "5555555566666666777777778888888",
-      "7": "99999999AAAAAAAABBBBBBBBCCCCCCCC"
-    },
-    "message": "Tag read successfully"
+    "message": "Tag detected successfully"
   }
 }
 ```

@@ -11,6 +11,13 @@ Quick navigation guide for the LibreTap MQTT Protocol documentation.
 - QoS and retention policies
 - Error handling and codes
 - Security requirements and ACL
+- **Section 7.3:** Current shared secret cryptographic model
+
+🗺️ **[ROADMAP.md](./ROADMAP.md)** - Protocol evolution roadmap
+- Current v1.0 shared secret model documentation
+- Planned v2.0 challenge-response architecture
+- Migration strategy and timeline
+- Security analysis and improvements
 
 ## Schemas (JSON Schema Definitions)
 
