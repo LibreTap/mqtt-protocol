@@ -188,12 +188,20 @@ sequenceDiagram
     participant Service
     participant Device
     
+    Service->>Device: read/start
+    Device->>Device: mode_change (read)
+    Note over Device: User presents tag
+    Device->>Service: read/success (tag_uid)
+    Device->>Device: mode_change (idle)
+    Note over Service: Validate tag not registered
     Service->>Device: register/start (tag_uid, key)
     Device->>Device: mode_change (register)
     Note over Device: Writing to tag
     Device->>Service: register/success
     Device->>Device: mode_change (idle)
 ```
+
+**Note:** Use `read` mode for tag discovery before registration. This allows validation of the tag UID before performing the write operation.
 
 ### 4.3 Authentication Flow
 
